@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="it" data-genere="donna" data-modo="misto">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Parrucchiere Pescara | Studio Riflesso, donna e uomo</title>
+  <meta name="description" content="Studio Riflesso, parrucchiere a Pescara: taglio, colore, balayage, acconciature sposa e barberia uomo con panno caldo. Prenota online o su WhatsApp.">
+  <!-- BOZZA: togliere questa riga quando il sito va online per il cliente -->
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#0E0C0A">
+  <link rel="canonical" href="https://carestiadavide2004-cmd.github.io/bozza-parrucchiere-studio-riflesso/">
+
+  <!-- Anteprima su WhatsApp e social (i link devono essere completi) -->
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="it_IT">
+  <meta property="og:site_name" content="Studio Riflesso">
+  <meta property="og:title" content="Studio Riflesso, parrucchiere a Pescara">
+  <meta property="og:description" content="Il tuo stile, nella luce giusta. Taglio, colore, sposa e barberia nel centro di Pescara.">
+  <meta property="og:url" content="https://carestiadavide2004-cmd.github.io/bozza-parrucchiere-studio-riflesso/">
+  <meta property="og:image" content="https://carestiadavide2004-cmd.github.io/bozza-parrucchiere-studio-riflesso/assets/img/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Studio Riflesso, parrucchiere a Pescara: il tuo stile, nella luce giusta">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..600;1,6..96,400..500&family=Jost:wght@400;500&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+
+  <script src="config.js"></script>
+  <script>
+    /* Prima del disegno della pagina: modalità, genere attivo e intro. */
+    (function () {
+      var d = document.documentElement, c = window.SITE || {}, modo = c.genere, g;
+      if (modo !== 'donna' && modo !== 'uomo') modo = 'misto';
+      g = modo === 'misto' ? (c.genereIniziale === 'uomo' ? 'uomo' : 'donna') : modo;
+      if (modo === 'misto') { try { var s = localStorage.getItem('sr-genere'); if (s === 'donna' || s === 'uomo') g = s; } catch (e) {} }
+      d.setAttribute('data-modo', modo);
+      d.setAttribute('data-genere', g);
+      d.classList.add('js');
+      try {
+        if (!sessionStorage.getItem('sr-intro') && !matchMedia('(prefers-reduced-motion: reduce)').matches) d.classList.add('intro-on');
+      } catch (e) {}
+      /* Se lo script principale non parte, il contenuto resta comunque visibile */
+      setTimeout(function () { if (!window.SR_READY) d.classList.remove('js', 'intro-on'); }, 4000);
+    })();
+  </script>
+  <script src="js/main.js" defer></script>
+  <!-- I dati strutturati HairSalon vengono generati da config.js (vedi js/main.js) -->
+</head>
+<body>
+  <a class="skip" href="#contenuto">Vai al contenuto</a>
+
+  <!-- Icone e monogramma -->
+  <svg width="0" height="0" class="sprite" aria-hidden="true" focusable="false">
+    <defs>
+      <path id="mk-arch" d="M5 81V33a27 27 0 0 1 54 0v48z"/>
+      <path id="mk-arch-in" d="M9 81V33a23 23 0 0 1 46 0v48"/>
+      <path id="mk-glint" d="M41.5 21l6-6M45 24.5l3.5-3.5"/>
+      <path id="mk-s" d="M22.64 55.51L22.64 55.51Q20.48 55.51 18.96 54.83Q17.43 54.15 16.4 52.98L16.4 52.98L14.27 55.34L14.05 55.34L14.05 48.08L14.31 48.08Q14.65 49.56 15.27 50.85Q15.9 52.14 16.88 53.12Q17.86 54.1 19.22 54.66Q20.58 55.22 22.4 55.22L22.4 55.22Q24.15 55.22 25.45 54.58Q26.75 53.95 27.47 52.74Q28.18 51.53 28.18 49.83L28.18 49.83Q28.18 48.37 27.43 47.36Q26.69 46.34 25.47 45.6Q24.25 44.87 22.78 44.23Q21.31 43.59 19.85 42.88Q18.39 42.16 17.16 41.21Q15.94 40.26 15.2 38.9Q14.46 37.54 14.46 35.58L14.46 35.58Q14.46 33.64 15.45 32.2Q16.45 30.75 18.08 29.95Q19.71 29.15 21.65 29.15L21.65 29.15Q23.32 29.15 24.69 29.68Q26.06 30.21 27.04 31.3L27.04 31.3L29.15 29.15L29.37 29.15L29.37 36.33L29.12 36.33Q28.67 34.03 27.69 32.51Q26.7 30.99 25.24 30.23Q23.78 29.48 21.94 29.48L21.94 29.48Q19.61 29.48 18.4 30.65Q17.2 31.82 17.2 33.74L17.2 33.74Q17.2 35.05 17.93 35.97Q18.66 36.89 19.85 37.6Q21.04 38.3 22.49 38.94Q23.93 39.58 25.37 40.33Q26.8 41.09 27.99 42.1Q29.19 43.11 29.92 44.56Q30.65 46 30.65 48.06L30.65 48.06Q30.65 50.31 29.65 51.98Q28.66 53.66 26.85 54.58Q25.04 55.51 22.64 55.51"/>
+      <path id="mk-r" d="M36.9 48.48L30.99 48.48L30.99 48.29L36.63 48.29Q38.45 48.29 39.72 47.51Q40.98 46.72 41.63 45.22Q42.27 43.72 42.27 41.61L42.27 41.61Q42.27 39.48 41.63 37.95Q40.98 36.42 39.72 35.6Q38.45 34.78 36.63 34.78L36.63 34.78L24.15 34.78L24.15 34.5L36.9 34.5Q39.84 34.5 42.05 35.25Q44.27 36 45.49 37.57Q46.72 39.14 46.72 41.61L46.72 41.61Q46.72 44.08 45.57 45.59Q44.42 47.1 42.23 47.79Q40.03 48.48 36.9 48.48L36.9 48.48M36.54 63L24.15 63L24.15 62.72L36.54 62.72L36.54 63M32.47 62.85L28.21 62.85L28.21 34.67L32.47 34.67L32.47 62.85M46.21 63.21L46.21 63.21Q44.48 63.21 43.5 62.6Q42.52 61.99 42.07 60.94Q41.63 59.88 41.51 58.58Q41.4 57.28 41.38 55.89Q41.36 54.51 41.24 53.21Q41.11 51.9 40.67 50.86Q40.22 49.81 39.23 49.2Q38.25 48.58 36.5 48.58L36.5 48.58L30.99 48.58L30.99 48.41L37.88 48.41Q40.64 48.41 42.24 49.19Q43.85 49.97 44.65 51.24Q45.45 52.51 45.7 54.05Q45.96 55.59 45.98 57.12Q46 58.65 46.04 59.93Q46.07 61.21 46.43 61.99Q46.8 62.77 47.78 62.77L47.78 62.77Q48.39 62.77 48.91 62.64Q49.44 62.51 49.84 62.32L49.84 62.32L49.95 62.56Q49.49 62.81 48.52 63.01Q47.56 63.21 46.21 63.21"/>
+      <mask id="mk-cut" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="84">
+        <rect width="64" height="84" fill="#fff"/>
+        <use href="#mk-s" fill="#000" stroke="#000" stroke-width="2" stroke-linejoin="round"/>
+      </mask>
+    </defs>
+    <symbol id="i-mark" viewBox="0 0 64 84">
+      <use href="#mk-arch" fill="none" stroke="currentColor" stroke-width="1.6"/>
+      <use href="#mk-arch-in" fill="none" stroke="currentColor" stroke-width=".6" opacity=".5"/>
+      <use href="#mk-glint" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <use href="#mk-r" fill="currentColor" mask="url(#mk-cut)"/>
+      <use href="#mk-s" fill="currentColor"/>
+    </symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path fill="currentColor" d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25c1.1.37 2.3.57 3.6.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></symbol>
+    <symbol id="i-wa" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.5-1.2A9 9 0 1 0 12 3z"/><path fill="currentColor" d="M9.1 7.6c.2 0 .4 0 .5.4l.7 1.6c.1.2 0 .4-.1.6l-.5.6c-.1.1-.2.3 0 .5.4.7 1 1.4 1.7 1.9.5.4 1 .6 1.3.8.2.1.4.1.5-.1l.6-.8c.2-.2.4-.2.6-.1l1.6.8c.2.1.4.2.4.4.1.3 0 1-.4 1.4-.4.5-1.2.9-2 .8-1-.1-2.5-.6-3.9-1.9-1.4-1.3-2.3-2.8-2.5-3.7-.2-.9.1-1.6.5-2 .3-.3.6-.4.7-.4z"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M12 19V5M6 11l6-6 6 6"/></symbol>
+    <symbol id="i-prev" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M15 18l-6-6 6-6"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M9 6l6 6-6 6"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.6" d="M12 21s-7-6.2-7-11.2A7 7 0 0 1 19 9.8C19 14.8 12 21 12 21z"/><circle cx="12" cy="10" r="2.4" fill="none" stroke="currentColor" stroke-width="1.6"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path fill="none" stroke="currentColor" stroke-width="1.6" d="M3.5 7l8.5 6 8.5-6"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3.5l2.6 5.5 6 .7-4.5 4.1 1.2 5.9L12 16.8l-5.3 2.9 1.2-5.9-4.5-4.1 6-.7z"/></symbol>
+    <symbol id="i-ig" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor"/></symbol>
+    <symbol id="i-fb" viewBox="0 0 24 24"><path fill="currentColor" d="M13.5 21v-7.5h2.6l.4-3h-3V8.6c0-.9.3-1.5 1.6-1.5h1.6V4.4c-.3 0-1.2-.1-2.3-.1-2.3 0-3.9 1.4-3.9 4v2.2H7.9v3h2.6V21z"/></symbol>
+    <symbol id="i-tt" viewBox="0 0 24 24"><path fill="currentColor" d="M16.2 3c.3 2.3 1.7 3.9 3.8 4.1v3a7 7 0 0 1-3.8-1.2v6.3a5.8 5.8 0 1 1-5.8-5.8c.3 0 .6 0 .9.1v3.1a2.8 2.8 0 1 0 1.9 2.6V3z"/></symbol>
+  </svg>
+
+  <!-- INTRO (solo al primo caricamento della visita) -->
+  <div class="intro" data-intro aria-hidden="true">
+    <div class="intro__half intro__half--top"></div>
+    <div class="intro__half intro__half--bot"></div>
+    <div class="intro__logo">
+      <svg class="intro__mark" viewBox="0 0 64 84">
+        <defs>
+          <mask id="intro-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="84">
+            <use href="#mk-arch" fill="none" stroke="#fff" stroke-width="1.6"/>
+            <use href="#mk-glint" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+            <use href="#mk-r" fill="#fff"/>
+            <use href="#mk-s" fill="#fff"/>
+          </mask>
+          <linearGradient id="intro-shine" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0" stop-color="#fff" stop-opacity="0"/>
+            <stop offset=".5" stop-color="#fff" stop-opacity=".95"/>
+            <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <use href="#i-mark" width="64" height="84"/>
+        <g mask="url(#intro-mask)"><path class="intro__shine" d="M-34 -6h20L-40 92h-20z" fill="url(#intro-shine)"/></g>
+      </svg>
+      <p class="intro__name">Studio Riflesso</p>
+    </div>
+  </div>
+
+  <!-- HEADER -->
+  <header class="header" data-header>
+    <div class="header__in">
+      <a class="brand" href="#top" aria-label="Studio Riflesso, torna all'inizio">
+        <svg class="brand__mark" aria-hidden="true"><use href="#i-mark"/></svg>
+        <span class="brand__name"><small>Studio</small>Riflesso</span>
+      </a>
+      <nav class="nav" aria-label="Sezioni">
+        <a href="#chi-siamo">Chi siamo</a>
+        <a href="#servizi">Servizi</a>
+        <a href="#team">Team</a>
+        <a href="#galleria">Galleria</a>
+        <a href="#contatti">Contatti</a>
+      </nav>
+      <div class="switch" role="group" aria-label="Mostra i servizi per" data-switch>
+        <button type="button" data-set-genere="donna" aria-pressed="true">Donna</button>
+        <button type="button" data-set-genere="uomo" aria-pressed="false">Uomo</button>
+        <span class="switch__thumb" aria-hidden="true"></span>
+      </div>
+      <a class="btn btn--glow btn--sm header__cta" href="#prenota">Prenota</a>
+      <button class="burger" type="button" aria-expanded="false" aria-controls="menu" data-burger>
+        <span class="sr-only">Apri il menu</span><i></i><i></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- MENU A TUTTO SCHERMO (telefono) -->
+  <div class="menu" id="menu" data-menu inert>
+    <nav class="menu__nav" aria-label="Menu">
+      <a href="#chi-siamo"><span>Chi siamo</span></a>
+      <a href="#servizi"><span>Servizi e prezzi</span></a>
+      <a href="#team"><span>Il team</span></a>
+      <a href="#galleria"><span>Galleria</span></a>
+      <a href="#prenota"><span>Prenota</span></a>
+      <a href="#contatti"><span>Contatti</span></a>
+    </nav>
+    <div class="menu__foot">
+      <p class="menu__status" data-status-text></p>
+      <div class="menu__actions">
+        <a class="btn btn--ghost btn--sm" data-tel href="#"><svg class="ico" aria-hidden="true"><use href="#i-phone"/></svg>Chiama</a>
+        <a class="btn btn--ghost btn--sm" data-wa href="#" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-wa"/></svg>WhatsApp</a>
+      </div>
+    </div>
+  </div>
+
+  <main id="contenuto">
+
+    <!-- 1. HERO -->
+    <section class="hero" id="top" aria-label="Benvenuto">
+      <div class="hero__media" data-hero-media>
+        <noscript><img src="assets/img/hero-donna.webp" alt="" width="1920" height="1080"></noscript>
+      </div>
+      <div class="hero__shade" aria-hidden="true"></div>
+      <div class="grain" aria-hidden="true"></div>
+      <div class="hero__content" data-hero-content>
+        <div class="wrap" data-swap>
+          <p class="hero__kicker" data-hero style="--hd:.05s"><span data-salon="nome">Studio Riflesso</span>, Pescara</p>
+          <h1 class="hero__title" data-t="heroTitolo" data-words>Capelli che catturano la luce.</h1>
+          <div class="hero__reflect" aria-hidden="true"><div class="hero__reflect-in" data-reflect></div></div>
+          <p class="hero__lead" data-hero style="--hd:.75s" data-t="heroTesto"></p>
+          <div class="hero__actions" data-hero style="--hd:.9s">
+            <a class="btn btn--glow btn--magnet" href="#prenota">Prenota ora</a>
+            <a class="btn btn--ghost btn--magnet" data-tel href="#"><svg class="ico" aria-hidden="true"><use href="#i-phone"/></svg>Chiama</a>
+          </div>
+          <p class="status" data-hero style="--hd:1.05s"><span class="status__dot" aria-hidden="true"></span><span data-status-text></span></p>
+        </div>
+      </div>
+      <a class="hero__scroll" href="#chi-siamo" data-hero style="--hd:1.2s"><span>Scorri</span><i aria-hidden="true"></i></a>
+    </section>
+
+    <!-- 2. CHI SIAMO -->
+    <section class="about" id="chi-siamo" aria-labelledby="about-title">
+      <div class="wrap about__intro" data-swap>
+        <div>
+          <p class="kicker" data-reveal>La nostra storia</p>
+          <h2 id="about-title" data-t="chiSiamoTitolo" data-lines></h2>
+        </div>
+        <div class="about__text" data-about-text data-reveal style="--i:2"></div>
+      </div>
+
+      <div class="mirror" data-mirror>
+        <div class="mirror__sticky">
+          <div class="mirror__frame" data-mirror-frame>
+            <div class="mirror__zoom" data-mirror-zoom></div>
+            <div class="mirror__veil" data-mirror-veil></div>
+          </div>
+          <span class="mirror__glint" data-mirror-glint aria-hidden="true"></span>
+          <figure class="mirror__caption" data-mirror-caption>
+            <blockquote data-swap><p data-t="citazione"></p></blockquote>
+            <figcaption data-swap data-t="citazioneFirma"></figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <div class="wrap about__more">
+        <ul class="points" data-points data-swap></ul>
+        <dl class="stats" data-stats></dl>
+      </div>
+    </section>
+
+    <!-- Nastro dei servizi -->
+    <div class="ticker" aria-hidden="true" data-ticker>
+      <div class="ticker__track" data-swap></div>
+    </div>
+
+    <!-- 3. SERVIZI E PREZZI -->
+    <section class="section light from-dark services" id="servizi" aria-labelledby="services-title">
+      <div class="wrap">
+        <header class="head">
+          <div>
+            <p class="kicker" data-reveal>Servizi e prezzi</p>
+            <h2 id="services-title" data-t="serviziTitolo" data-lines></h2>
+          </div>
+          <p class="head__text" data-t="serviziTesto" data-reveal style="--i:2"></p>
+        </header>
+        <div class="services__body">
+          <div class="services__media media" data-curtain data-services-media></div>
+          <div class="services__list">
+            <div class="cats" data-cats data-swap></div>
+            <div class="services__more" data-reveal>
+              <p data-more-text data-swap></p>
+              <button class="btn btn--line" type="button" data-open-listino>Vedi tutto il listino</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. IL TEAM -->
+    <section class="section light team" id="team" aria-labelledby="team-title">
+      <div class="wrap">
+        <header class="head">
+          <div>
+            <p class="kicker" data-reveal>Il team</p>
+            <h2 id="team-title" data-t="teamTitolo" data-lines></h2>
+          </div>
+          <p class="head__text" data-t="teamTesto" data-reveal style="--i:2"></p>
+        </header>
+      </div>
+      <div class="track team__track" data-team data-swap data-track tabindex="-1" aria-label="Operatori"></div>
+      <div class="track-progress" aria-hidden="true"><span data-track-bar="team"></span></div>
+    </section>
+
+    <!-- 5. GALLERIA -->
+    <section class="section dark from-light gallery" id="galleria" aria-labelledby="gallery-title">
+      <div class="wrap">
+        <header class="head">
+          <div>
+            <p class="kicker" data-reveal>Galleria</p>
+            <h2 id="gallery-title" data-t="galleriaTitolo" data-lines></h2>
+          </div>
+        </header>
+      </div>
+      <div class="gal" role="region" aria-roledescription="carosello" aria-label="Lavori del salone">
+        <div class="gal__track" data-gal tabindex="0" data-swap></div>
+        <div class="wrap gal__ctrl">
+          <button class="round" type="button" data-gal-prev aria-label="Foto precedente"><svg class="ico" aria-hidden="true"><use href="#i-prev"/></svg></button>
+          <p class="gal__count" aria-live="polite"><span data-gal-now>01</span><i aria-hidden="true"><b data-gal-bar></b></i><span data-gal-tot>06</span></p>
+          <button class="round" type="button" data-gal-next aria-label="Foto successiva"><svg class="ico" aria-hidden="true"><use href="#i-next"/></svg></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. PRENOTAZIONE -->
+    <section class="section light from-dark book" id="prenota" aria-labelledby="book-title">
+      <div class="wrap book__grid">
+        <div class="book__aside">
+          <p class="kicker" data-reveal>Prenotazione</p>
+          <h2 id="book-title" data-t="prenotaTitolo" data-lines></h2>
+          <p class="book__text" data-t="prenotaTesto" data-reveal style="--i:2"></p>
+          <p class="book__alt" data-reveal style="--i:3">Preferisci parlare con noi?
+            <a data-tel href="#">Chiama</a> oppure <a data-wa href="#" target="_blank" rel="noopener">scrivi su WhatsApp</a>.</p>
+          <div class="book__media media" data-curtain data-book-media></div>
+        </div>
+
+        <form class="bform" data-bform novalidate aria-labelledby="book-title" data-reveal="fade">
+          <p class="demo-note" data-demo-note hidden></p>
+          <ol class="steps" aria-label="Passaggi della prenotazione">
+            <li data-step-dot="1"><span>1</span><em>Servizio</em></li>
+            <li data-step-dot="2"><span>2</span><em>Operatore</em></li>
+            <li data-step-dot="3"><span>3</span><em>Giorno e ora</em></li>
+            <li data-step-dot="4"><span>4</span><em>I tuoi dati</em></li>
+          </ol>
+          <div class="steps__bar" aria-hidden="true"><span data-step-bar></span></div>
+          <p class="steps__label" data-step-label aria-live="polite"></p>
+
+          <input type="checkbox" name="botcheck" class="sr-only" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+          <fieldset class="step" data-step="1">
+            <legend class="step__title" tabindex="-1">Che servizio desideri?</legend>
+            <div class="chips" data-svc-cats role="group" aria-label="Categorie"></div>
+            <div class="opts" data-svc-opts></div>
+          </fieldset>
+
+          <fieldset class="step" data-step="2">
+            <legend class="step__title" tabindex="-1">Con chi vuoi prenotare?</legend>
+            <div class="opts opts--people" data-op-opts></div>
+          </fieldset>
+
+          <fieldset class="step" data-step="3">
+            <legend class="step__title" tabindex="-1">Quando vuoi venire?</legend>
+            <div class="days" data-days role="group" aria-label="Giorno"></div>
+            <div class="other-date">
+              <label for="bk-date">Oppure scegli un'altra data</label>
+              <input id="bk-date" type="date" data-date-input>
+            </div>
+            <p class="step__sub" data-slots-title>Orari disponibili</p>
+            <div class="slots" data-slots role="group" aria-label="Orario"></div>
+          </fieldset>
+
+          <fieldset class="step" data-step="4">
+            <legend class="step__title" tabindex="-1">I tuoi dati</legend>
+            <div class="field">
+              <label for="bk-name">Nome e cognome</label>
+              <input id="bk-name" name="nome" autocomplete="name" required data-in="name">
+            </div>
+            <div class="field">
+              <label for="bk-phone">Telefono</label>
+              <input id="bk-phone" name="telefono" type="tel" inputmode="tel" autocomplete="tel" required data-in="phone">
+            </div>
+            <div class="field">
+              <label for="bk-notes">Note <span class="opt-tag">(facoltative)</span></label>
+              <textarea id="bk-notes" name="note" rows="3" data-in="notes" placeholder="Per esempio: capelli lunghi, allergie, foto di riferimento"></textarea>
+            </div>
+            <label class="check">
+              <input type="checkbox" required data-in="privacy">
+              <span>Acconsento all'uso dei miei dati solo per gestire questa prenotazione.</span>
+            </label>
+          </fieldset>
+
+          <div class="step" data-step="5">
+            <p class="step__title" tabindex="-1">Controlla e invia</p>
+            <dl class="summary" data-summary></dl>
+            <p class="summary__note">È una richiesta: ti richiamiamo per confermare l'orario.</p>
+          </div>
+
+          <div class="step step--done" data-step="6">
+            <p class="step__title" tabindex="-1" data-done-title></p>
+            <p data-done-text></p>
+            <button class="btn btn--line btn--sm" type="button" data-restart>Nuova prenotazione</button>
+          </div>
+
+          <p class="form-error" data-error role="alert"></p>
+
+          <div class="bform__nav" data-nav-row>
+            <button class="link-btn" type="button" data-back>Indietro</button>
+            <div class="bform__go">
+              <a class="btn btn--line btn--sm" data-wa-book href="#" target="_blank" rel="noopener" hidden><svg class="ico" aria-hidden="true"><use href="#i-wa"/></svg>Prenota su WhatsApp</a>
+              <button class="btn btn--dark" type="button" data-next>Avanti</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- 7. RECENSIONI -->
+    <section class="section dark from-light reviews" id="recensioni" aria-labelledby="reviews-title">
+      <div class="wrap reviews__in">
+        <p class="kicker kicker--center" data-reveal>Recensioni</p>
+        <h2 id="reviews-title" data-t="recensioniTitolo" data-lines></h2>
+        <p class="sample-tag" data-reveal style="--i:2">Recensioni di esempio</p>
+        <div class="rv" role="region" aria-roledescription="carosello" aria-label="Recensioni di esempio" data-rv>
+          <div class="rv__stage" data-rv-stage data-swap></div>
+          <div class="rv__ctrl">
+            <button class="round" type="button" data-rv-prev aria-label="Recensione precedente"><svg class="ico" aria-hidden="true"><use href="#i-prev"/></svg></button>
+            <div class="rv__dots" data-rv-dots></div>
+            <button class="round" type="button" data-rv-next aria-label="Recensione successiva"><svg class="ico" aria-hidden="true"><use href="#i-next"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. DOMANDE FREQUENTI -->
+    <section class="section light from-dark faq" id="faq" aria-labelledby="faq-title">
+      <div class="wrap faq__grid">
+        <div class="faq__head">
+          <p class="kicker" data-reveal>Domande frequenti</p>
+          <h2 id="faq-title" data-t="faqTitolo" data-lines></h2>
+          <p class="head__text" data-reveal style="--i:2"><span data-t="faqTesto"></span></p>
+          <a class="btn btn--line btn--sm" data-wa href="#" target="_blank" rel="noopener" data-reveal style="--i:3"><svg class="ico" aria-hidden="true"><use href="#i-wa"/></svg>Scrivici su WhatsApp</a>
+        </div>
+        <div class="qa-list" data-faq data-swap></div>
+      </div>
+    </section>
+
+    <!-- 9. CONTATTI -->
+    <section class="section light contact" id="contatti" aria-labelledby="contact-title">
+      <div class="wrap">
+        <header class="head">
+          <div>
+            <p class="kicker" data-reveal>Contatti</p>
+            <h2 id="contact-title" data-t="contattiTitolo" data-lines></h2>
+          </div>
+        </header>
+        <div class="contact__grid">
+          <div class="contact__info" data-reveal>
+            <address class="addr">
+              <svg class="ico" aria-hidden="true"><use href="#i-pin"/></svg>
+              <span data-address></span>
+            </address>
+            <ul class="links">
+              <li><a data-tel href="#"><svg class="ico" aria-hidden="true"><use href="#i-phone"/></svg><span data-salon="telefono"></span></a></li>
+              <li><a data-wa href="#" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-wa"/></svg>WhatsApp</a></li>
+              <li><a data-mail href="#"><svg class="ico" aria-hidden="true"><use href="#i-mail"/></svg><span data-salon="email"></span></a></li>
+            </ul>
+            <div class="contact__btns">
+              <a class="btn btn--dark btn--sm" data-directions href="#" target="_blank" rel="noopener">Indicazioni stradali</a>
+            </div>
+            <div class="socials" data-socials></div>
+          </div>
+          <div class="hours" data-reveal style="--i:1">
+            <h3 class="hours__title">Orari</h3>
+            <p class="hours__now"><span class="status__dot" aria-hidden="true"></span><span data-status-text></span></p>
+            <table class="hours__table" data-hours></table>
+          </div>
+          <div class="map media" data-curtain data-map></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 10. FOOTER -->
+  <footer class="footer dark from-light">
+    <div class="wrap">
+      <div class="footer__top">
+        <a class="footer__brand" href="#top" aria-label="Studio Riflesso, torna all'inizio">
+          <svg class="footer__mark" aria-hidden="true"><use href="#i-mark"/></svg>
+          <span><small>Studio</small>Riflesso</span>
+        </a>
+        <p class="footer__slogan" data-salon="slogan"></p>
+      </div>
+      <div class="footer__cols">
+        <div>
+          <h3>Dove siamo</h3>
+          <p data-address></p>
+          <p><a data-directions href="#" target="_blank" rel="noopener">Apri in Google Maps</a></p>
+        </div>
+        <div>
+          <h3>Contatti</h3>
+          <p><a data-tel href="#"><span data-salon="telefono"></span></a></p>
+          <p><a data-mail href="#"><span data-salon="email"></span></a></p>
+        </div>
+        <div>
+          <h3>Orari</h3>
+          <div data-hours-short></div>
+        </div>
+        <div>
+          <h3>Seguici</h3>
+          <div class="socials socials--dark" data-socials></div>
+        </div>
+      </div>
+      <dl class="credits">
+        <dt>Fotografie e video</dt><dd>Pexels</dd>
+        <dt>Sito realizzato da</dt><dd>Davide Carestia</dd>
+      </dl>
+      <div class="footer__bottom">
+        <p>© <span data-year></span> <span data-salon="nome"></span>, P.IVA <span data-salon="partitaIva"></span></p>
+        <p><a href="privacy.html">Privacy</a></p>
+      </div>
+      <p class="footer__demo">Bozza dimostrativa: nomi, numeri e recensioni sono di esempio.</p>
+    </div>
+  </footer>
+
+  <!-- Listino completo -->
+  <dialog class="sheet" data-listino aria-labelledby="listino-title">
+    <div class="sheet__head">
+      <h2 id="listino-title" class="sheet__title" data-listino-title>Listino</h2>
+      <button class="round round--light" type="button" data-close-listino aria-label="Chiudi il listino"><svg class="ico" aria-hidden="true"><use href="#i-close"/></svg></button>
+    </div>
+    <div class="sheet__body" data-listino-body></div>
+  </dialog>
+
+  <!-- Lama di luce per il cambio Donna / Uomo -->
+  <div class="blade" data-blade aria-hidden="true"></div>
+
+  <!-- Barra fissa in basso (telefono) -->
+  <nav class="dock" aria-label="Contatti rapidi">
+    <a data-tel href="#"><svg class="ico" aria-hidden="true"><use href="#i-phone"/></svg>Chiama</a>
+    <a data-wa href="#" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-wa"/></svg>WhatsApp</a>
+    <a href="#top" aria-label="Torna su"><svg class="ico" aria-hidden="true"><use href="#i-up"/></svg></a>
+  </nav>
+</body>
+</html>
