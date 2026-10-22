@@ -907,6 +907,13 @@ html:not([data-modo="misto"]) [data-switch] { display: none; }
 .addcal__list { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: .75rem; }
 .done__after a { color: var(--text); font-weight: 500; text-underline-offset: .25em; }
 
+/* Trappola anti-bot: fuori dallo schermo, mai display:none */
+.hp { position: absolute; left: -9999px; top: 0; width: 1px; height: 1px; overflow: hidden; }
+/* Badge di reCAPTCHA nascosto (consentito da Google con la frase qui sotto nel modulo) */
+.grecaptcha-badge { visibility: hidden; }
+.rc-note { margin: 1rem 0 0; font-size: .75rem; line-height: 1.5; color: var(--text-muted); }
+.rc-note a { color: inherit; text-underline-offset: .2em; }
+.rc-note a:hover { color: var(--text); }
 .form-error { min-height: 1.45em; margin: .9rem 0 0; color: var(--error); font-size: .9rem; }
 .bform__nav {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1rem;

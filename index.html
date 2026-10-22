@@ -303,7 +303,11 @@
           <div class="steps__bar" aria-hidden="true"><span data-step-bar></span></div>
           <p class="steps__label" data-step-label aria-live="polite"></p>
 
-          <input type="checkbox" name="botcheck" class="sr-only" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <!-- Trappola anti-bot: fuori dallo schermo (non display:none). Le persone non la vedono; se è compilata non si salva niente -->
+          <div class="hp" aria-hidden="true">
+            <label for="bk-website">Il tuo sito web</label>
+            <input id="bk-website" name="website" type="text" tabindex="-1" autocomplete="off" data-hp>
+          </div>
 
           <fieldset class="step" data-step="1">
             <legend class="step__title" tabindex="-1">Che servizio desideri?</legend>
@@ -381,6 +385,7 @@
               <button class="btn btn--dark" type="button" data-next>Avanti</button>
             </div>
           </div>
+          <p class="rc-note" data-rc-note hidden>Questo sito è protetto da reCAPTCHA: si applicano le <a href="https://policies.google.com/privacy?hl=it" target="_blank" rel="noopener">Norme sulla privacy</a> e i <a href="https://policies.google.com/terms?hl=it" target="_blank" rel="noopener">Termini di servizio</a> di Google.</p>
         </form>
       </div>
     </section>

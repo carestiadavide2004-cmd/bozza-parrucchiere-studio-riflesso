@@ -665,7 +665,7 @@
     AG.state = F.dataset.agendo = 'loading';
     withTimeout((async () => {
       const mod = await import(new URL('js/agendo.js', document.baseURI).href);
-      const api = await mod.connect({ idSalone: AGC.idSalone, firebase: AGC.firebase });
+      const api = await mod.connect({ idSalone: AGC.idSalone, firebase: AGC.firebase, appCheckSiteKey: AGC.appCheckSiteKey });
       return { mod, api };
     })(), 12000).then(({ mod, api }) => {
       if (AG.state !== 'loading') return;
@@ -982,7 +982,8 @@
       const e = validate(s);
       if (e) { go(s); setError(e); return; }
     }
-    if ($('[name="botcheck"]', F).checked) return;
+    // Trappola anti-bot compilata: non si salva niente, ma il messaggio è quello di sempre
+    if ($('[data-hp]', F).value.trim()) { fakeDone(); return; }
     if (agReady()) { await submitAgendo(); return; }
     if (DEMO) { done(true); return; }
     const s = bkSvc(B.svc), o = bkOp(B.op);
@@ -1079,6 +1080,11 @@
     }
     go(6);
   }
+  function fakeDone() {
+    if (!agReady()) { done(DEMO); return; }
+    const o = bkOp(B.op);
+    doneAgendo({ id: 'nessuno', staffName: o ? o.nome : 'Nessuna preferenza', status: autoConfirm() ? 'confirmed' : 'pending' });
+  }
   // Calendario, frase finale: solo per le prenotazioni già confermate
   function doneExtras(ok) {
     ui.addcal.hidden = !ok;
@@ -1156,6 +1162,8 @@
     recap.hidden = true;
     ui.label.after(recap);
     showNote();
+    // Badge di reCAPTCHA nascosto: al suo posto la frase di Google sotto il pulsante
+    $('[data-rc-note]', F).hidden = AG.state === 'off';
     // Agendo si collega quando la prenotazione è vicina (o al primo tocco sul modulo)
     if (AG.state === 'idle') {
       const sec = $('#prenota');

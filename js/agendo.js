@@ -146,16 +146,31 @@ export class SlotTakenError extends Error {
 
 /* ---------- Collegamento a Firestore ---------- */
 
+let appCheck = null;
+
 /**
  * Carica Firebase e i dati pubblici del salone. Fallisce (e il sito torna a
- * WhatsApp) se il salone non esiste, non è pubblicato o non ha il sito collegato.
+ * WhatsApp) se la protezione anti-spam non parte, se il salone non esiste,
+ * non è pubblicato o non ha il sito collegato.
  */
-export async function connect({ idSalone, firebase }) {
-  const [{ initializeApp, getApps }, fs] = await Promise.all([
+export async function connect({ idSalone, firebase, appCheckSiteKey }) {
+  const [{ initializeApp, getApps }, ac, fs] = await Promise.all([
     import(CDN + 'firebase-app.js'),
+    import(CDN + 'firebase-app-check.js'),
     import(CDN + 'firebase-firestore.js')
   ]);
   const app = getApps().find((a) => a.name === 'agendo') || initializeApp(firebase, 'agendo');
+
+  // Anti-spam: App Check con reCAPTCHA Enterprise e rinnovo automatico, subito
+  // dopo l'app e prima di Firestore. Il primo gettone si chiede subito: se non
+  // arriva, connect() fallisce e il modulo passa a WhatsApp.
+  if (!appCheckSiteKey) throw new Error('app-check-senza-chiave');
+  appCheck ??= ac.initializeAppCheck(app, {
+    provider: new ac.ReCaptchaEnterpriseProvider(appCheckSiteKey),
+    isTokenAutoRefreshEnabled: true
+  });
+  await ac.getToken(appCheck, false);
+
   const db = fs.getFirestore(app);
   const bizRef = fs.doc(db, 'businesses', idSalone);
 

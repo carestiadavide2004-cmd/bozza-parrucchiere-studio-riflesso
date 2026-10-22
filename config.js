@@ -82,12 +82,17 @@ window.SITE = {
      scritti qui in config.js.
      Con attivo: false il modulo torna come prima: richiesta via Web3Forms
      (se c'è la chiave) e pulsante WhatsApp.
-     Se Agendo non risponde, il modulo passa da solo a WhatsApp.
+     Se Agendo non risponde, o la protezione anti-spam non si carica, il
+     modulo passa da solo a WhatsApp.
      Qui sotto c'è la configurazione web pubblica di Firebase: non è segreta
-     e non contiene password.  */
+     e non contiene password.
+     appCheckSiteKey: chiave PUBBLICA del sito per la protezione anti-spam
+     (Firebase App Check con reCAPTCHA Enterprise). Sta nella pagina per
+     come funziona reCAPTCHA: non esiste nessuna chiave segreta da mettere qui.  */
   agendo: {
     attivo: true,
     idSalone: "studio-riflesso",
+    appCheckSiteKey: "6LcaP_otAAAAACYeT1E2h0CFvpEplZ8cIaGfg1vC",
     firebase: {
       apiKey: "AIzaSyCby7n0tVroB-t5s4NDCI-EyORJXj6LaxU",
       authDomain: "app-prenotazioni-dbe8b.firebaseapp.com",
