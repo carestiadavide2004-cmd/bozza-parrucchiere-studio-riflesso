@@ -895,6 +895,10 @@ html:not([data-modo="misto"]) [data-switch] { display: none; }
 .summary__note { margin: 1rem 0 0; font-size: .88rem; color: var(--text-muted); }
 .step--done .step__title { font-size: clamp(1.8rem, 1.4rem + 1.4vw, 2.6rem); }
 .step--done p { color: var(--text-muted); max-width: 46ch; }
+.summary--done { margin: 1.25rem 0 1.75rem; }
+.summary--done > div { grid-template-columns: 1fr; }
+.check a { color: var(--text); text-underline-offset: .25em; }
+.form-help { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: .9rem; }
 
 .form-error { min-height: 1.4em; margin: .9rem 0 0; color: var(--error); font-size: .9rem; }
 .form-error:empty { min-height: 0; margin: 0; }

@@ -73,6 +73,29 @@ window.SITE = {
     anticipoMinimoMinuti: 60     // per oggi: non prima di un'ora da adesso
   },
 
+  /* ---------- AGENDO (prenotazioni online) ----------
+     Con attivo: true il modulo di prenotazione legge servizi, operatori e
+     orari liberi da Agendo e ci salva le richieste: il salone le conferma
+     dal suo pannello. Il listino e le descrizioni del sito restano quelli
+     scritti qui in config.js.
+     Con attivo: false il modulo torna come prima: richiesta via Web3Forms
+     (se c'è la chiave) e pulsante WhatsApp.
+     Se Agendo non risponde, il modulo passa da solo a WhatsApp.
+     Qui sotto c'è la configurazione web pubblica di Firebase: non è segreta
+     e non contiene password.  */
+  agendo: {
+    attivo: true,
+    idSalone: "studio-riflesso",
+    firebase: {
+      apiKey: "AIzaSyCby7n0tVroB-t5s4NDCI-EyORJXj6LaxU",
+      authDomain: "app-prenotazioni-dbe8b.firebaseapp.com",
+      projectId: "app-prenotazioni-dbe8b",
+      storageBucket: "app-prenotazioni-dbe8b.firebasestorage.app",
+      messagingSenderId: "545925371307",
+      appId: "1:545925371307:web:8dd60ff727b644ba4c2eee"
+    }
+  },
+
   /* ---------- NUMERI (contatori in "Chi siamo") ----------
      valore "operatori" = conta da solo gli operatori qui sotto.  */
   numeri: [

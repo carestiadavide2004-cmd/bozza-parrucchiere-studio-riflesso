@@ -330,7 +330,7 @@
             <legend class="step__title" tabindex="-1">I tuoi dati</legend>
             <div class="field">
               <label for="bk-name">Nome e cognome</label>
-              <input id="bk-name" name="nome" autocomplete="name" required data-in="name">
+              <input id="bk-name" name="nome" autocomplete="name" maxlength="80" required data-in="name">
             </div>
             <div class="field">
               <label for="bk-phone">Telefono</label>
@@ -338,11 +338,11 @@
             </div>
             <div class="field">
               <label for="bk-notes">Note <span class="opt-tag">(facoltative)</span></label>
-              <textarea id="bk-notes" name="note" rows="3" data-in="notes" placeholder="Per esempio: capelli lunghi, allergie, foto di riferimento"></textarea>
+              <textarea id="bk-notes" name="note" rows="3" maxlength="500" data-in="notes" placeholder="Per esempio: capelli lunghi, allergie, foto di riferimento"></textarea>
             </div>
             <label class="check">
               <input type="checkbox" required data-in="privacy">
-              <span>Acconsento all'uso dei miei dati solo per gestire questa prenotazione.</span>
+              <span>Ho letto l'<a href="privacy.html" target="_blank" rel="noopener">informativa privacy</a></span>
             </label>
           </fieldset>
 
@@ -355,10 +355,15 @@
           <div class="step step--done" data-step="6">
             <p class="step__title" tabindex="-1" data-done-title></p>
             <p data-done-text></p>
+            <dl class="summary summary--done" data-done-summary hidden></dl>
             <button class="btn btn--line btn--sm" type="button" data-restart>Nuova prenotazione</button>
           </div>
 
           <p class="form-error" data-error role="alert"></p>
+          <div class="form-help" data-error-actions hidden>
+            <a class="btn btn--dark btn--sm" data-tel href="#"><svg class="ico" aria-hidden="true"><use href="#i-phone"/></svg>Chiama</a>
+            <a class="btn btn--line btn--sm" data-wa-help href="#" target="_blank" rel="noopener"><svg class="ico" aria-hidden="true"><use href="#i-wa"/></svg>Scrivi su WhatsApp</a>
+          </div>
 
           <div class="bform__nav" data-nav-row>
             <button class="link-btn" type="button" data-back>Indietro</button>

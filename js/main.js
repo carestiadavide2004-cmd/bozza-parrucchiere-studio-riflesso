@@ -612,6 +612,10 @@
 
   /* =====================================================================
      PRENOTAZIONE A PASSAGGI
+     Con Agendo attivo (config.js → agendo) il modulo legge servizi, operatori
+     e orari liberi da Agendo e salva lì la richiesta. Se Agendo non risponde,
+     torna da solo a WhatsApp. Con Agendo spento funziona come prima
+     (Web3Forms o modalità demo, più WhatsApp).
      ===================================================================== */
   const P = C.prenotazione || {};
   const KEY = String(P.web3formsKey || '').trim();
@@ -620,18 +624,140 @@
   const B = { step: 1, svc: null, op: 'any', date: null, time: null, cat: null };
   const F = $('[data-bform]');
   const ui = F && {
-    err: $('[data-error]', F), back: $('[data-back]', F), next: $('[data-next]', F), wa: $('[data-wa-book]', F),
-    bar: $('[data-step-bar]', F), label: $('[data-step-label]', F), nav: $('[data-nav-row]', F),
+    err: $('[data-error]', F), help: $('[data-error-actions]', F), back: $('[data-back]', F), next: $('[data-next]', F), wa: $('[data-wa-book]', F),
+    bar: $('[data-step-bar]', F), label: $('[data-step-label]', F), nav: $('[data-nav-row]', F), note: $('[data-demo-note]', F),
     cats: $('[data-svc-cats]', F), opts: $('[data-svc-opts]', F), ops: $('[data-op-opts]', F),
     days: $('[data-days]', F), dateIn: $('[data-date-input]', F), slots: $('[data-slots]', F),
     name: $('[data-in="name"]', F), phone: $('[data-in="phone"]', F), notes: $('[data-in="notes"]', F), privacy: $('[data-in="privacy"]', F),
-    summary: $('[data-summary]', F)
+    summary: $('[data-summary]', F), doneSummary: $('[data-done-summary]', F)
   };
   let recap = null;
 
   const todayKey = () => romeNow().key;
-  const maxKey = () => addDays(todayKey(), P.giorniPrenotabili || 60);
+  const forG = g => g === G || g === 'entrambi';
+  const withTimeout = (p, ms) => Promise.race([p, new Promise((_, no) => setTimeout(() => no(new Error('timeout')), ms))]);
+  // Scrive l'HTML solo se è cambiato (così gli aggiornamenti in tempo reale non fanno sfarfallare)
+  const setHTML = (el, h) => { if (el._h !== h) { el._h = h; el.innerHTML = h; } };
+  const cleanName = v => v.trim().replace(/\s+/g, ' ').slice(0, 80);
+  const cleanPhone = v => {
+    let p = v.replace(/[^\d+ ]/g, ' ').replace(/(?!^)\+/g, '').replace(/\s+/g, ' ').trim();
+    if (p.length > 20) p = p.replace(/ /g, '');
+    return p;
+  };
+
+  /* ---------- Agendo ---------- */
+  const AGC = C.agendo || {};
+  // Stato: 'off' (non usato), 'idle', 'loading', 'ready', 'failed' (si torna a WhatsApp)
+  const AG = { state: AGC.attivo === true && AGC.idSalone && AGC.firebase ? 'idle' : 'off', mod: null, api: null, svc: {}, busy: {}, stops: {}, timers: {}, other: null };
+  const agOn = () => AG.state === 'idle' || AG.state === 'loading' || AG.state === 'ready';
+  const agReady = () => AG.state === 'ready';
+  const waOnly = () => AG.state === 'failed';
+
+  // Firebase si scarica solo qui: quando il visitatore arriva alla prenotazione
+  function agStart() {
+    if (AG.state !== 'idle') return;
+    AG.state = F.dataset.agendo = 'loading';
+    withTimeout((async () => {
+      const mod = await import(new URL('js/agendo.js', document.baseURI).href);
+      const api = await mod.connect({ idSalone: AGC.idSalone, firebase: AGC.firebase });
+      return { mod, api };
+    })(), 12000).then(({ mod, api }) => {
+      if (AG.state !== 'loading') return;
+      AG.mod = mod;
+      AG.api = api;
+      api.business.services.forEach(s => {
+        AG.svc[s.id] = { id: s.id, nome: s.name, durata: s.durationMin, prezzo: s.price, da: s.priceFrom !== false, cat: s.category || 'Servizi', g: s.gender || 'entrambi', raw: s };
+      });
+      AG.state = F.dataset.agendo = 'ready';
+      agWatch('strip', todayKey(), addDays(todayKey(), 13));
+      agRefresh(true);
+    }).catch(agFail);
+  }
+  function agFail(err) {
+    if (!agOn()) return;
+    console.warn('Agendo non risponde: il modulo passa a WhatsApp.', err);
+    AG.state = F.dataset.agendo = 'failed';
+    Object.values(AG.stops).forEach(stop => stop());
+    Object.values(AG.timers).forEach(clearTimeout);
+    AG.stops = {};
+    agRefresh(true);
+  }
+  // Orari occupati in tempo reale per un intervallo di giorni
+  function agWatch(key, from, to) {
+    if (!agReady() || AG.stops[key]) return;
+    AG.timers[key] = setTimeout(() => agFail(new Error('orari non arrivati')), 12000);
+    AG.stops[key] = AG.api.watchBusy(from, to, byDate => {
+      clearTimeout(AG.timers[key]);
+      for (let k = from; k <= to; k = addDays(k, 1)) AG.busy[k] = byDate[k] || {};
+      agRefresh(false);
+    }, agFail);
+  }
+  // Giorno scelto dal calendario, oltre i 14 della striscia
+  function agWatchOther(k) {
+    if (!agReady() || !k || k <= addDays(todayKey(), 13) || AG.other === k) return;
+    if (AG.stops.other) { AG.stops.other(); clearTimeout(AG.timers.other); delete AG.stops.other; }
+    if (AG.other) delete AG.busy[AG.other];
+    AG.other = k;
+    agWatch('other', k, k);
+  }
+  // Ridisegna il modulo con i dati nuovi, senza perdere le scelte fatte
+  function agRefresh(full) {
+    if (!F) return;
+    if (!full) { if (B.step === 3) renderStep3(); return; }
+    showNote();
+    if (B.svc && !bkSvc(B.svc)) { B.svc = null; B.time = null; }
+    if (B.op !== 'any' && !bkOps().some(o => o.id === B.op)) B.op = 'any';
+    go(B.step >= 2 && B.step <= 5 && !B.svc ? 1 : B.step, { focus: false });
+  }
+  // Un giorno con Agendo: orari liberi (null = dati ancora in arrivo)
+  function agDay(k) {
+    const s = AG.svc[B.svc], biz = AG.api.business;
+    if (!s || !AG.mod.openRanges(biz, k).length) return { free: [], slots: [], why: 'chiuso' };
+    const busy = AG.busy[k];
+    if (!busy) return null;
+    const staff = biz.staff.filter(p => forG(p.gender || 'entrambi'));
+    const list = AG.mod.eligibleStaff(s.raw, staff, B.op === 'any' ? null : B.op);
+    const slots = AG.mod.appointmentSlots(biz, k, s.raw, list, busy);
+    const free = slots.filter(x => x.free).map(x => x.start);
+    return { free, slots, why: free.length ? '' : slots.some(x => x.reason === 'full') ? 'pieno' : 'chiuso' };
+  }
+
+  /* ---------- Servizi e operatori: da Agendo o da config.js ---------- */
+  const bkSvc = id => (agReady() ? AG.svc[id] : SVC_ID[id]);
+  function bkCats() {
+    if (!agReady()) return SVC[G];
+    const cats = [];
+    Object.values(AG.svc).filter(s => forG(s.g)).forEach(s => {
+      let c = cats.find(x => x.categoria === s.cat);
+      if (!c) cats.push(c = { categoria: s.cat, voci: [] });
+      c.voci.push(s);
+    });
+    return cats;
+  }
+  const agPerson = p => ({ id: p.id, nome: p.name, ruolo: p.role || '', foto: (opById(p.id) || {}).foto });
+  function bkOps() {
+    if (!agReady()) return operatori();
+    const s = AG.svc[B.svc];
+    const staff = AG.api.business.staff.filter(p => forG(p.gender || 'entrambi'));
+    return (s ? AG.mod.eligibleStaff(s.raw, staff) : staff).map(agPerson);
+  }
+  function bkOp(id) {
+    if (!agReady()) return opById(id);
+    const p = AG.api.business.staff.find(x => x.id === id);
+    return p && agPerson(p);
+  }
+  const priceText = s => (s.prezzo == null ? '' : `${s.da === false ? '' : 'da '}${euro(s.prezzo)}`);
+
+  /* ---------- Giorni e orari ---------- */
+  const maxDays = () => (agReady() ? AG.api.business.booking.maxDaysAhead : P.giorniPrenotabili || 60);
+  const maxKey = () => addDays(todayKey(), maxDays());
+  // Orari liberi di un giorno, in minuti (null = in arrivo da Agendo)
   function slotsFor(k) {
+    if (agOn()) {
+      if (!agReady()) return null;
+      const d = agDay(k);
+      return d && d.free;
+    }
     const n = romeNow();
     if (!k || k < n.key || k > maxKey()) return [];
     const dur = (SVC_ID[B.svc] || {}).durata || 30;
@@ -643,17 +769,30 @@
     });
     return out;
   }
+  function dayState(k) {
+    if (agReady()) {
+      const d = agDay(k);
+      return !d || d.free.length ? { ok: true, label: monShort(k) } : { ok: false, label: d.why };
+    }
+    if (agOn()) return ranges(dowOf(k)).length ? { ok: true, label: monShort(k) } : { ok: false, label: 'chiuso' };
+    return slotsFor(k).length ? { ok: true, label: monShort(k) } : { ok: false, label: 'chiuso' };
+  }
   function dateError(k) {
     if (!k) return 'Scegli il giorno.';
     if (k < todayKey()) return 'Questa data è già passata: scegline un\'altra.';
-    if (k > maxKey()) return `Si può prenotare fino a ${P.giorniPrenotabili || 60} giorni in anticipo.`;
-    if (!ranges(dowOf(k)).length) return `Il ${GIORNI[dowOf(k)]} siamo chiusi: scegli un altro giorno.`;
-    if (!slotsFor(k).length) return 'Per questo giorno non ci sono più orari liberi: scegline un altro.';
+    if (k > maxKey()) return `Si può prenotare fino a ${maxDays()} giorni in anticipo.`;
+    if (agReady()) {
+      const why = (AG.api.business.closedDays || {})[k];
+      if (why != null) return `${cap(dateLong(k))} siamo chiusi${why ? ` (${why})` : ''}: scegli un altro giorno.`;
+      if (!AG.mod.openRanges(AG.api.business, k).length) return `Il ${GIORNI[dowOf(k)]} siamo chiusi: scegli un altro giorno.`;
+    } else if (!agOn() && !ranges(dowOf(k)).length) return `Il ${GIORNI[dowOf(k)]} siamo chiusi: scegli un altro giorno.`;
+    const list = slotsFor(k);
+    if (list && !list.length) return 'Per questo giorno non ci sono più orari liberi: scegline un altro.';
     return '';
   }
 
   function waMessage() {
-    const s = SVC_ID[B.svc], o = opById(B.op);
+    const s = bkSvc(B.svc), o = bkOp(B.op);
     const rows = [`Ciao ${S.nome}, vorrei prenotare:`];
     if (s) rows.push(`Servizio: ${s.nome}`);
     rows.push(`Operatore: ${o ? o.nome : 'nessuna preferenza'}`);
@@ -665,61 +804,80 @@
     return rows.join('\n');
   }
   function updateRecap() {
-    const s = SVC_ID[B.svc], o = opById(B.op);
+    const s = bkSvc(B.svc), o = bkOp(B.op);
     if (!recap) return;
     const show = s && B.step >= 2 && B.step <= 4;
     recap.hidden = !show;
-    if (show) recap.innerHTML = `<strong>${esc(s.nome)}</strong>, ${durata(s.durata)}, da ${euro(s.prezzo)}${o ? `, con ${esc(o.nome.split(' ')[0])}` : ''}`;
+    if (show) recap.innerHTML = `<strong>${esc(s.nome)}</strong>, ${durata(s.durata)}${s.prezzo == null ? '' : `, ${priceText(s)}`}${o ? `, con ${esc(o.nome.split(' ')[0])}` : ''}`;
     ui.wa.href = waLink(waMessage());
+  }
+  function showNote() {
+    const n = ui.note;
+    if (waOnly()) {
+      n.hidden = false;
+      n.innerHTML = '<strong>Prenotazione online non disponibile in questo momento.</strong> Scegli servizio e orario: alla fine invii la richiesta su WhatsApp e ti rispondiamo noi.';
+    } else if (AG.state === 'off' && DEMO) {
+      n.hidden = false;
+      n.innerHTML = '<strong>Modalità demo.</strong> Le richieste non vengono spedite: per attivarle inserisci la chiave Web3Forms in config.js. Il pulsante WhatsApp funziona già.';
+    } else n.hidden = true;
   }
 
   function renderStep1() {
-    const cats = SVC[G];
-    if (!B.cat || !cats.some(c => c.categoria === B.cat)) B.cat = (SVC_ID[B.svc] && SVC_ID[B.svc].cat) || cats[0].categoria;
+    const cats = bkCats();
+    if (!cats.length) {
+      ui.cats.innerHTML = '';
+      ui.opts.innerHTML = '<p class="slots__empty">Al momento nessun servizio si prenota online: chiamaci o scrivici su WhatsApp.</p>';
+      return;
+    }
+    const sel = bkSvc(B.svc);
+    if (!B.cat || !cats.some(c => c.categoria === B.cat)) B.cat = (sel && cats.some(c => c.categoria === sel.cat) && sel.cat) || cats[0].categoria;
     ui.cats.innerHTML = cats.map(c => `<button type="button" class="chip" data-cat="${esc(c.categoria)}" aria-pressed="${c.categoria === B.cat}">${esc(c.categoria)}</button>`).join('');
     const cat = cats.find(c => c.categoria === B.cat);
     ui.opts.innerHTML = cat.voci.map(v => `
       <label class="opt"><input type="radio" name="servizio" value="${v.id}"${v.id === B.svc ? ' checked' : ''}>
         <span class="opt__name">${esc(v.nome)}</span><span class="opt__meta">${durata(v.durata)}</span>
-        <span class="opt__price"><small>da</small> ${euro(v.prezzo)}</span></label>`).join('');
+        ${v.prezzo == null ? '' : `<span class="opt__price">${v.da === false ? '' : '<small>da</small> '}${euro(v.prezzo)}</span>`}</label>`).join('');
   }
   function renderStep2() {
+    const list = bkOps();
+    if (B.op !== 'any' && !list.some(o => o.id === B.op)) B.op = 'any';
     const any = `<label class="opt"><input type="radio" name="operatore" value="any"${B.op === 'any' ? ' checked' : ''}>
       <span class="opt__any" aria-hidden="true"><svg><use href="#i-mark"/></svg></span>
       <span class="opt__name">Nessuna preferenza</span><span class="opt__meta">Ti assegniamo il primo operatore libero</span></label>`;
-    ui.ops.innerHTML = any + operatori().map(o => `
+    ui.ops.innerHTML = any + list.map(o => `
       <label class="opt"><input type="radio" name="operatore" value="${o.id}"${B.op === o.id ? ' checked' : ''}>
-        <img src="${o.foto}-sm.webp" alt="" width="52" height="52" loading="lazy" decoding="async">
+        ${o.foto ? `<img src="${o.foto}-sm.webp" alt="" width="52" height="52" loading="lazy" decoding="async">` : '<span class="opt__any" aria-hidden="true"><svg><use href="#i-mark"/></svg></span>'}
         <span class="opt__name">${esc(o.nome)}</span><span class="opt__meta">${esc(o.ruolo)}</span></label>`).join('');
   }
   function renderStep3() {
     const start = todayKey();
     const days = [];
     for (let i = 0; i < 14; i++) days.push(addDays(start, i));
-    ui.days.innerHTML = days.map(k => {
-      const ok = slotsFor(k).length > 0;
-      return `<button type="button" class="day" data-day="${k}" aria-pressed="${k === B.date}"${ok ? '' : ' disabled'} aria-label="${cap(dateLong(k))}${ok ? '' : ', chiuso'}">
-        <span class="day__dow">${dayShort(k)}</span><span class="day__num">${Number(k.slice(8))}</span><span class="day__mon">${ok ? monShort(k) : 'chiuso'}</span></button>`;
-    }).join('');
+    setHTML(ui.days, days.map(k => {
+      const st = dayState(k);
+      return `<button type="button" class="day" data-day="${k}" aria-pressed="${k === B.date}"${st.ok ? '' : ' disabled'} aria-label="${cap(dateLong(k))}${st.ok ? '' : `, ${st.label}`}">
+        <span class="day__dow">${dayShort(k)}</span><span class="day__num">${Number(k.slice(8))}</span><span class="day__mon">${st.label}</span></button>`;
+    }).join(''));
     ui.dateIn.min = start;
     ui.dateIn.max = maxKey();
-    if (B.date && !days.includes(B.date)) ui.dateIn.value = B.date;
+    if (B.date && !days.includes(B.date)) { ui.dateIn.value = B.date; agWatchOther(B.date); }
     renderSlots();
   }
   function renderSlots() {
-    if (!B.date) { ui.slots.innerHTML = '<p class="slots__empty">Scegli prima un giorno: qui compaiono gli orari liberi.</p>'; return; }
+    if (!B.date) { setHTML(ui.slots, '<p class="slots__empty">Scegli prima un giorno: qui compaiono gli orari liberi.</p>'); return; }
     const list = slotsFor(B.date);
+    if (!list) { setHTML(ui.slots, '<p class="slots__empty">Carico gli orari liberi…</p>'); return; }
     if (B.time && !list.includes(toMin(B.time))) B.time = null;
-    ui.slots.innerHTML = list.length
+    setHTML(ui.slots, list.length
       ? list.map(m => `<button type="button" class="slot" data-time="${hhmm(m)}" aria-pressed="${hhmm(m) === B.time}">${hm(m)}</button>`).join('')
-      : '<p class="slots__empty">Per questo giorno non ci sono orari liberi.</p>';
+      : '<p class="slots__empty">Per questo giorno non ci sono orari liberi.</p>');
   }
   function renderSummary() {
-    const s = SVC_ID[B.svc], o = opById(B.op);
+    const s = bkSvc(B.svc), o = bkOp(B.op);
     const rows = [
-      ['Servizio', s ? `${s.nome} (${durata(s.durata)}, da ${euro(s.prezzo)})` : '', 1],
+      ['Servizio', s ? `${s.nome} (${durata(s.durata)}${s.prezzo == null ? '' : `, ${priceText(s)}`})` : '', 1],
       ['Operatore', o ? o.nome : 'Nessuna preferenza', 2],
-      ['Giorno e ora', B.date ? `${cap(dateLong(B.date))}, ore ${B.time}` : '', 3],
+      ['Giorno e ora', B.date ? `${cap(dateLong(B.date))}, ore ${hm(toMin(B.time))}` : '', 3],
       ['Nome', ui.name.value.trim(), 4],
       ['Telefono', ui.phone.value.trim(), 4]
     ];
@@ -728,24 +886,33 @@
       `<div><dt>${k}</dt><dd>${esc(v)}</dd><button class="link-btn" type="button" data-edit="${st}">Modifica</button></div>`).join('');
   }
 
-  function setError(msg) { ui.err.textContent = msg || ''; }
+  // help = true: sotto il messaggio compaiono i pulsanti Chiama e WhatsApp
+  function setError(msg, help = false) {
+    ui.err.textContent = msg || '';
+    if (!ui.help) return;
+    ui.help.hidden = !help;
+    if (help) $('[data-wa-help]', ui.help).href = waLink(waMessage());
+  }
   function validate(step) {
-    if (step === 1 && !SVC_ID[B.svc]) return 'Scegli un servizio per continuare.';
+    if (step === 1 && !bkSvc(B.svc)) return 'Scegli un servizio per continuare.';
     if (step === 3) {
       const e = dateError(B.date);
       if (e) return e;
-      if (!B.time || !slotsFor(B.date).includes(toMin(B.time))) return 'Scegli un orario tra quelli disponibili.';
+      const list = slotsFor(B.date);
+      if (!list) return 'Un attimo: sto caricando gli orari liberi.';
+      if (!B.time || !list.includes(toMin(B.time))) return 'Scegli un orario tra quelli disponibili.';
     }
     if (step === 4) {
       const bad = [];
-      const nameOk = ui.name.value.trim().length >= 2;
-      const phoneOk = ui.phone.value.replace(/\D/g, '').length >= 8;
+      const phone = cleanPhone(ui.phone.value);
+      const nameOk = cleanName(ui.name.value).length >= 2;
+      const phoneOk = /^[+]?[0-9 ]{6,20}$/.test(phone) && phone.replace(/\D/g, '').length >= 8;
       ui.name.setAttribute('aria-invalid', String(!nameOk));
       ui.phone.setAttribute('aria-invalid', String(!phoneOk));
       if (!nameOk) bad.push('il nome');
       if (!phoneOk) bad.push('un numero di telefono valido');
       if (bad.length) return `Inserisci ${bad.join(' e ')}.`;
-      if (!ui.privacy.checked) return 'Per inviare la richiesta serve il consenso all\'uso dei dati.';
+      if (!ui.privacy.checked) return 'Per inviare la richiesta conferma di aver letto l\'informativa privacy.';
     }
     return '';
   }
@@ -764,6 +931,10 @@
     ui.nav.hidden = n === 6;
     ui.back.hidden = n === 1;
     ui.wa.hidden = n !== 5;
+    // Senza Agendo raggiungibile, l'ultimo passo è il pulsante WhatsApp
+    ui.next.hidden = n === 5 && waOnly();
+    ui.wa.classList.toggle('btn--dark', waOnly());
+    ui.wa.classList.toggle('btn--line', !waOnly());
     ui.next.textContent = n < 4 ? 'Avanti' : n === 4 ? 'Vedi il riepilogo' : 'Invia la richiesta';
     if (n === 1) renderStep1();
     if (n === 2) renderStep2();
@@ -785,9 +956,10 @@
       const e = validate(s);
       if (e) { go(s); setError(e); return; }
     }
-    if (DEMO) { done(true); return; }
     if ($('[name="botcheck"]', F).checked) return;
-    const s = SVC_ID[B.svc], o = opById(B.op);
+    if (agReady()) { await submitAgendo(); return; }
+    if (DEMO) { done(true); return; }
+    const s = bkSvc(B.svc), o = bkOp(B.op);
     const label = ui.next.textContent;
     F.classList.add('is-sending');
     ui.next.textContent = 'Invio in corso…';
@@ -815,32 +987,96 @@
       setError(`Invio non riuscito. Riprova tra poco, prenota su WhatsApp o chiamaci al ${S.telefono}.`);
     } finally {
       F.classList.remove('is-sending');
-      ui.next.textContent = label;
+      if (B.step === 5) ui.next.textContent = label;
     }
   }
+
+  // Invio ad Agendo: prenotazione "in attesa" e fasce da 30 minuti in una transazione
+  async function submitAgendo() {
+    const s = AG.svc[B.svc], start = toMin(B.time);
+    const day = agDay(B.date);
+    const slot = day && day.slots.find(x => x.start === start && x.free);
+    if (!slot) { slotTaken(); return; }
+    const staffIds = B.op === 'any' ? AG.mod.orderStaffForBooking(slot.freeStaffIds, AG.busy[B.date] || {}) : [B.op];
+    const label = ui.next.textContent;
+    F.classList.add('is-sending');
+    ui.next.textContent = 'Invio in corso…';
+    setError('');
+    try {
+      const res = await withTimeout(AG.api.book({
+        service: s.raw, staffIds, date: B.date, start,
+        name: cleanName(ui.name.value), phone: cleanPhone(ui.phone.value),
+        notes: ui.notes.value.trim().slice(0, 500), noPreference: B.op === 'any'
+      }), 25000);
+      doneAgendo(res);
+    } catch (err) {
+      if (err && err.code === 'slot-taken') slotTaken();
+      else {
+        console.warn('Invio ad Agendo non riuscito.', err);
+        setError('Non siamo riusciti a inviare la richiesta. Riprova tra poco, oppure chiamaci o scrivici su WhatsApp: ti fissiamo noi l\'appuntamento.', true);
+      }
+    } finally {
+      F.classList.remove('is-sending');
+      if (B.step === 5) ui.next.textContent = label;
+    }
+  }
+  function slotTaken() {
+    const k = B.date;
+    B.time = null;
+    go(3);
+    setError('Questo orario è appena stato prenotato, scegline un altro.');
+    // Ricarica subito dal server gli orari di quel giorno
+    AG.api.fetchBusy(k, k).then(byDate => {
+      AG.busy[k] = byDate[k] || {};
+      if (B.step === 3) renderStep3();
+    }).catch(() => {});
+  }
+  function doneAgendo(res) {
+    $('[data-done-title]', F).textContent = 'Richiesta inviata!';
+    $('[data-done-text]', F).textContent = 'Ti richiamiamo per confermare l\'appuntamento.';
+    const rows = [
+      ['Servizio', AG.svc[B.svc].nome],
+      ['Operatore', res.staffName],
+      ['Giorno e ora', `${cap(dateLong(B.date))}, ore ${hm(toMin(B.time))}`],
+      ['Nome', cleanName(ui.name.value)],
+      ['Telefono', cleanPhone(ui.phone.value)]
+    ];
+    ui.doneSummary.innerHTML = rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('');
+    ui.doneSummary.hidden = false;
+    go(6);
+  }
   function done(demo) {
-    const s = SVC_ID[B.svc];
+    const s = bkSvc(B.svc);
     $('[data-done-title]', F).textContent = demo ? 'Modalità demo: richiesta non inviata.' : 'Richiesta inviata, grazie.';
     $('[data-done-text]', F).textContent = demo
       ? 'In questa bozza il modulo non spedisce nulla. Con la chiave Web3Forms in config.js la richiesta arriva per email al salone. Intanto puoi provare il pulsante “Prenota su WhatsApp”.'
       : `Ti richiamiamo al ${ui.phone.value.trim()} per confermare ${s.nome}, ${dateLong(B.date)} alle ${B.time}.`;
+    ui.doneSummary.hidden = true;
     go(6);
   }
 
   function bookPreset({ svc, op }) {
-    if (svc && SVC_ID[svc]) { B.svc = svc; B.cat = SVC_ID[svc].cat; B.time = null; }
+    agStart();
+    let missing = false;
+    if (svc) {
+      if (bkSvc(svc)) { B.svc = svc; B.cat = bkSvc(svc).cat; B.time = null; } else missing = true;
+    }
     if (op) B.op = op;
+    if (B.op !== 'any' && !bkOps().some(o => o.id === B.op)) B.op = 'any';
     closeListino();
-    const target = svc ? (op || B.op !== 'any' ? 3 : 2) : (SVC_ID[B.svc] ? 3 : 1);
+    const has = !!bkSvc(B.svc);
+    const target = missing || !has ? 1 : svc ? (B.op !== 'any' ? 3 : 2) : 3;
     go(target, { focus: false });
+    if (missing) setError('Questo servizio al momento non si prenota online: scegline un altro oppure chiamaci.');
     F.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
     const title = $('.step.is-active .step__title', F);
     if (title) setTimeout(() => title.focus({ preventScroll: true }), reduce ? 0 : 900);
   }
 
   function bookingOnGender() {
-    if (B.svc && SVC_ID[B.svc].g !== G) { B.svc = null; B.time = null; B.cat = null; }
-    if (B.op !== 'any' && !operatori().some(o => o.id === B.op)) B.op = 'any';
+    const s = bkSvc(B.svc);
+    if (B.svc && (!s || !forG(s.g))) { B.svc = null; B.time = null; B.cat = null; }
+    if (B.op !== 'any' && !bkOps().some(o => o.id === B.op)) B.op = 'any';
     const target = B.step >= 2 && B.step <= 5 && !B.svc ? 1 : B.step;
     go(target, { focus: false });
   }
@@ -851,21 +1087,27 @@
     recap.className = 'recap';
     recap.hidden = true;
     ui.label.after(recap);
-    if (DEMO) {
-      const note = $('[data-demo-note]', F);
-      note.hidden = false;
-      note.innerHTML = '<strong>Modalità demo.</strong> Le richieste non vengono spedite: per attivarle inserisci la chiave Web3Forms in config.js. Il pulsante WhatsApp funziona già.';
+    showNote();
+    // Agendo si collega quando la prenotazione è vicina (o al primo tocco sul modulo)
+    if (AG.state === 'idle') {
+      const sec = $('#prenota');
+      if ('IntersectionObserver' in window && sec) {
+        const ob = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { ob.disconnect(); agStart(); } }, { rootMargin: '0px 0px 100% 0px' });
+        ob.observe(sec);
+      } else agStart();
+      F.addEventListener('focusin', agStart, { once: true });
     }
     F.addEventListener('submit', e => e.preventDefault());
     F.addEventListener('change', e => {
       const t = e.target;
       if (t.name === 'servizio') { B.svc = t.value; B.time = null; setError(''); updateRecap(); }
-      if (t.name === 'operatore') { B.op = t.value; updateRecap(); }
+      if (t.name === 'operatore') { B.op = t.value; B.time = null; updateRecap(); }
       if (t === ui.dateIn && t.value) {
         const err = dateError(t.value);
         if (err) { setError(err); t.value = ''; return; }
         B.date = t.value; B.time = null; setError('');
         $$('.day', ui.days).forEach(d => d.setAttribute('aria-pressed', String(d.dataset.day === B.date)));
+        agWatchOther(B.date);
         renderSlots();
         updateRecap();
       }
@@ -897,11 +1139,13 @@
       if (e.target.closest('[data-restart]')) {
         Object.assign(B, { svc: null, op: 'any', date: null, time: null, cat: null });
         ui.name.value = ''; ui.phone.value = ''; ui.notes.value = ''; ui.privacy.checked = false;
+        ui.doneSummary.hidden = true;
         go(1);
       }
     });
     ui.back.addEventListener('click', () => go(Math.max(1, B.step - 1)));
     ui.next.addEventListener('click', () => {
+      if (F.classList.contains('is-sending')) return;
       if (B.step === 5) { submit(); return; }
       const e = validate(B.step);
       if (e) { setError(e); return; }
