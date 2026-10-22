@@ -26,6 +26,8 @@
     const own = C.testi[G] && C.testi[G][key];
     return own !== undefined ? own : (C.testi.comune || {})[key];
   };
+  // Campi che aprono la tastiera (non caselle, scelte o pulsanti)
+  const isTextField = el => !!(el && el.matches && el.matches('textarea, select, input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]):not([type="hidden"])'));
   const ico = id => `<svg class="ico" aria-hidden="true"><use href="#i-${id}"/></svg>`;
   const img = (base, alt, sizes, extra = '') =>
     `<img src="${base}-sm.webp" srcset="${base}-sm.webp 600w, ${base}.webp 1080w" sizes="${sizes}" alt="${esc(alt)}" width="600" height="750" loading="lazy" decoding="async"${extra}>`;
@@ -629,7 +631,9 @@
     cats: $('[data-svc-cats]', F), opts: $('[data-svc-opts]', F), ops: $('[data-op-opts]', F),
     days: $('[data-days]', F), dateIn: $('[data-date-input]', F), slots: $('[data-slots]', F),
     name: $('[data-in="name"]', F), phone: $('[data-in="phone"]', F), notes: $('[data-in="notes"]', F), privacy: $('[data-in="privacy"]', F),
-    summary: $('[data-summary]', F), doneSummary: $('[data-done-summary]', F)
+    summary: $('[data-summary]', F), doneSummary: $('[data-done-summary]', F),
+    sumTitle: $('[data-summary-title]', F), sumNote: $('[data-summary-note]', F),
+    doneText: $('[data-done-text]', F), addcal: $('[data-addcal]', F), after: $('[data-done-after]', F)
   };
   let recap = null;
 
@@ -652,6 +656,8 @@
   const agOn = () => AG.state === 'idle' || AG.state === 'loading' || AG.state === 'ready';
   const agReady = () => AG.state === 'ready';
   const waOnly = () => AG.state === 'failed';
+  // Conferma automatica accesa in Agendo (Impostazioni → Sito web): niente "richiesta", prenotazione subito confermata
+  const autoConfirm = () => agReady() && AG.api.business.website?.autoConfirm === true;
 
   // Firebase si scarica solo qui: quando il visitatore arriva alla prenotazione
   function agStart() {
@@ -811,6 +817,16 @@
     if (show) recap.innerHTML = `<strong>${esc(s.nome)}</strong>, ${durata(s.durata)}${s.prezzo == null ? '' : `, ${priceText(s)}`}${o ? `, con ${esc(o.nome.split(' ')[0])}` : ''}`;
     ui.wa.href = waLink(waMessage());
   }
+  function bookTexts() {
+    const conf = autoConfirm();
+    const t = $('[data-t="prenotaTesto"]');
+    const txt = testo(conf ? 'prenotaTestoConfermata' : 'prenotaTesto') || testo('prenotaTesto');
+    if (t && txt && t.textContent !== txt) t.textContent = txt;
+    ui.sumTitle.textContent = conf ? 'Controlla e conferma' : 'Controlla e invia';
+    ui.sumNote.textContent = conf
+      ? 'Confermando, l\'appuntamento entra subito nella nostra agenda.'
+      : 'È una richiesta: ti richiamiamo per confermare l\'orario.';
+  }
   function showNote() {
     const n = ui.note;
     if (waOnly()) {
@@ -912,7 +928,7 @@
       if (!nameOk) bad.push('il nome');
       if (!phoneOk) bad.push('un numero di telefono valido');
       if (bad.length) return `Inserisci ${bad.join(' e ')}.`;
-      if (!ui.privacy.checked) return 'Per inviare la richiesta conferma di aver letto l\'informativa privacy.';
+      if (!ui.privacy.checked) return 'Per prenotare conferma di aver letto l\'informativa privacy.';
     }
     return '';
   }
@@ -935,20 +951,30 @@
     ui.next.hidden = n === 5 && waOnly();
     ui.wa.classList.toggle('btn--dark', waOnly());
     ui.wa.classList.toggle('btn--line', !waOnly());
-    ui.next.textContent = n < 4 ? 'Avanti' : n === 4 ? 'Vedi il riepilogo' : 'Invia la richiesta';
+    ui.next.textContent = n < 4 ? 'Avanti' : n === 4 ? 'Vedi il riepilogo' : autoConfirm() ? 'Conferma la prenotazione' : 'Invia la richiesta';
+    bookTexts();
     if (n === 1) renderStep1();
     if (n === 2) renderStep2();
     if (n === 3) renderStep3();
     if (n === 5) renderSummary();
     setError('');
     updateRecap();
+    // Si scorre solo qui, al cambio di passaggio e una volta sola
     if (opts.focus !== false) {
-      const title = $('.step.is-active .step__title', F);
       const r = F.getBoundingClientRect();
-      if (r.top < 0 || r.top > innerHeight * .6) F.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
-      if (title) setTimeout(() => title.focus({ preventScroll: true }), reduce ? 0 : 450);
+      if (r.top < 0 || r.top > VH * .6) F.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+      focusTitle(reduce ? 0 : 450);
     }
     measureSoon();
+  }
+  // Porta il lettore di schermo sul titolo del passaggio, ma non se il cliente
+  // ha già toccato un campo: rubargli il fuoco chiuderebbe la tastiera
+  let titleTimer = null;
+  function focusTitle(delay) {
+    clearTimeout(titleTimer);
+    const title = $('.step.is-active .step__title', F);
+    if (!title) return;
+    titleTimer = setTimeout(() => { if (!isTextField(document.activeElement)) title.focus({ preventScroll: true }); }, delay);
   }
 
   async function submit() {
@@ -1013,7 +1039,7 @@
       if (err && err.code === 'slot-taken') slotTaken();
       else {
         console.warn('Invio ad Agendo non riuscito.', err);
-        setError('Non siamo riusciti a inviare la richiesta. Riprova tra poco, oppure chiamaci o scrivici su WhatsApp: ti fissiamo noi l\'appuntamento.', true);
+        setError('Non siamo riusciti a completare la prenotazione. Riprova tra poco, oppure chiamaci o scrivici su WhatsApp: ti fissiamo noi l\'appuntamento.', true);
       }
     } finally {
       F.classList.remove('is-sending');
@@ -1032,18 +1058,59 @@
     }).catch(() => {});
   }
   function doneAgendo(res) {
-    $('[data-done-title]', F).textContent = 'Richiesta inviata!';
-    $('[data-done-text]', F).textContent = 'Ti richiamiamo per confermare l\'appuntamento.';
+    const ok = res.status === 'confirmed';
+    const s = AG.svc[B.svc], start = toMin(B.time);
+    $('[data-done-title]', F).textContent = ok ? 'Prenotazione confermata!' : 'Richiesta inviata!';
+    ui.doneText.textContent = ok ? '' : 'Ti richiamiamo per confermare l\'appuntamento.';
+    ui.doneText.hidden = ok;
     const rows = [
-      ['Servizio', AG.svc[B.svc].nome],
+      ['Servizio', s.nome],
       ['Operatore', res.staffName],
-      ['Giorno e ora', `${cap(dateLong(B.date))}, ore ${hm(toMin(B.time))}`],
+      ['Giorno e ora', `${cap(dateLong(B.date))}, ore ${hm(start)}`],
       ['Nome', cleanName(ui.name.value)],
       ['Telefono', cleanPhone(ui.phone.value)]
     ];
     ui.doneSummary.innerHTML = rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('');
     ui.doneSummary.hidden = false;
+    doneExtras(ok);
+    if (ok) {
+      calendarLinks({ id: res.id, s, op: res.staffName, date: B.date, start });
+      $('[data-wa-after]', F).href = waLink(`Ciao ${S.nome}, vorrei spostare o disdire la prenotazione: ${s.nome}, ${dateLong(B.date)} alle ${hm(start)}.`);
+    }
     go(6);
+  }
+  // Calendario, frase finale: solo per le prenotazioni già confermate
+  function doneExtras(ok) {
+    ui.addcal.hidden = !ok;
+    ui.addcal.open = false;
+    ui.after.hidden = !ok;
+  }
+
+  /* ---------- Aggiungi al calendario: file .ics e Google Calendar ---------- */
+  const calStamp = d => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const icsText = v => String(v).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+  // Righe del file .ics al massimo di 75 byte: si va a capo con uno spazio davanti
+  const icsFold = line => {
+    const out = [];
+    while (line.length > 60) { out.push(line.slice(0, 60)); line = ' ' + line.slice(60); }
+    return out.concat(line).join('\r\n');
+  };
+  function calendarLinks({ id, s, op, date, start }) {
+    const from = AG.mod.romeToDate(date, start), to = AG.mod.romeToDate(date, start + s.durata);
+    const title = `${s.nome} da ${S.nome}`;
+    const info = `Con ${op}. Per spostarla o disdirla chiamaci al ${S.telefono} o scrivici su WhatsApp.`;
+    const ics = [
+      'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Studio Riflesso//Prenotazioni//IT', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+      'BEGIN:VEVENT', `UID:${id}@studio-riflesso`, `DTSTAMP:${calStamp(new Date())}`,
+      `DTSTART:${calStamp(from)}`, `DTEND:${calStamp(to)}`,
+      `SUMMARY:${icsText(title)}`, `LOCATION:${icsText(indirizzo)}`, `DESCRIPTION:${icsText(info)}`,
+      'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:Promemoria appuntamento', 'TRIGGER:-PT2H', 'END:VALARM',
+      'END:VEVENT', 'END:VCALENDAR'
+    ].map(icsFold).join('\r\n');
+    $('[data-cal-ics]', F).href = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics);
+    $('[data-cal-google]', F).href = 'https://calendar.google.com/calendar/render?' + new URLSearchParams({
+      action: 'TEMPLATE', text: title, dates: `${calStamp(from)}/${calStamp(to)}`, details: info, location: indirizzo
+    });
   }
   function done(demo) {
     const s = bkSvc(B.svc);
@@ -1051,7 +1118,9 @@
     $('[data-done-text]', F).textContent = demo
       ? 'In questa bozza il modulo non spedisce nulla. Con la chiave Web3Forms in config.js la richiesta arriva per email al salone. Intanto puoi provare il pulsante “Prenota su WhatsApp”.'
       : `Ti richiamiamo al ${ui.phone.value.trim()} per confermare ${s.nome}, ${dateLong(B.date)} alle ${B.time}.`;
+    ui.doneText.hidden = false;
     ui.doneSummary.hidden = true;
+    doneExtras(false);
     go(6);
   }
 
@@ -1069,8 +1138,7 @@
     go(target, { focus: false });
     if (missing) setError('Questo servizio al momento non si prenota online: scegline un altro oppure chiamaci.');
     F.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
-    const title = $('.step.is-active .step__title', F);
-    if (title) setTimeout(() => title.focus({ preventScroll: true }), reduce ? 0 : 900);
+    focusTitle(reduce ? 0 : 900);
   }
 
   function bookingOnGender() {
@@ -1140,6 +1208,8 @@
         Object.assign(B, { svc: null, op: 'any', date: null, time: null, cat: null });
         ui.name.value = ''; ui.phone.value = ''; ui.notes.value = ''; ui.privacy.checked = false;
         ui.doneSummary.hidden = true;
+        ui.doneText.hidden = false;
+        doneExtras(false);
         go(1);
       }
     });
@@ -1213,6 +1283,10 @@
   const header = $('[data-header]');
   const heroEl = $('.hero'), heroContent = $('[data-hero-content]');
   let heroH = heroEl.offsetHeight, lastY = scrollY, ticking = false, pars = [], lastW = 0, menuOpen = false;
+  /* Larghezza e altezza dello schermo lette solo all'avvio e quando cambia la
+     LARGHEZZA (rotazione, finestra): la tastiera del telefono e le barre del
+     browser cambiano solo l'altezza e non devono far ricalcolare nulla. */
+  let VW = innerWidth, VH = document.documentElement.clientHeight;
 
   function registerParallax() {
     pars = reduce ? [] : $$('[data-parallax]').map(el => ({ el, box: el.closest('.media') || el.parentElement, f: parseFloat(el.dataset.parallax) || .06, top: 0, h: 0 }));
@@ -1242,7 +1316,7 @@
 
   function frame() {
     ticking = false;
-    const y = scrollY, vh = innerHeight;
+    const y = scrollY, vh = VH;
     if (header) {
       header.classList.toggle('is-scrolled', y > 30);
       if (!menuOpen) {
@@ -1285,10 +1359,32 @@
   }
   function requestFrame() { if (!ticking) { ticking = true; requestAnimationFrame(frame); } }
   addEventListener('scroll', requestFrame, { passive: true });
-  addEventListener('resize', () => { measureSoon(); requestFrame(); });
+  function onWidth() {
+    if (innerWidth === VW) return;
+    VW = innerWidth;
+    VH = document.documentElement.clientHeight;
+    measureSoon();
+    requestFrame();
+  }
+  addEventListener('resize', onWidth);
+  addEventListener('orientationchange', () => setTimeout(onWidth, 200));
   addEventListener('load', measure);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure);
-  if ('ResizeObserver' in window) new ResizeObserver(measureSoon).observe(document.body);
+
+  /* Tastiera aperta (campo di testo con il fuoco): la barra in basso sparisce.
+     Spostarsi da un campo all'altro non la fa lampeggiare. */
+  let kbTimer = null;
+  document.addEventListener('focusin', e => {
+    if (!isTextField(e.target)) return;
+    clearTimeout(kbTimer);
+    clearTimeout(titleTimer);
+    html.classList.add('kb-open');
+  });
+  document.addEventListener('focusout', e => {
+    if (!isTextField(e.target)) return;
+    clearTimeout(kbTimer);
+    kbTimer = setTimeout(() => { if (!isTextField(document.activeElement)) html.classList.remove('kb-open'); }, 150);
+  });
 
   // Nastro: in pausa quando non si vede
   const ticker = $('[data-ticker]');

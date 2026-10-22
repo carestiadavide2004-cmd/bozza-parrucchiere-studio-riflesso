@@ -211,8 +211,10 @@ export async function connect({ idSalone, firebase }) {
 
   /**
    * Prenotazione dal sito, come bookAppointment() di Agendo con le fasce:
-   * in UNA transazione la prenotazione "in attesa" e tutte le fasce da 30
-   * minuti che occupa. staffIds = operatori da provare in ordine (uno solo se
+   * in UNA transazione la prenotazione e tutte le fasce da 30 minuti che occupa.
+   * Nasce "confirmed" se il salone ha la conferma automatica accesa
+   * (website.autoConfirm, riletto qui così vale l'impostazione di questo
+   * momento), altrimenti "pending": come chiedono le regole (validSiteBooking). staffIds = operatori da provare in ordine (uno solo se
    * il cliente ha una preferenza). I campi sono esattamente quelli che le
    * regole accettano per le prenotazioni dal sito (validSiteBooking).
    */
@@ -220,6 +222,7 @@ export async function connect({ idSalone, firebase }) {
     const bookingRef = fs.doc(fs.collection(bizRef, 'bookings'));
     const fasceStarts = fasceForRange(start, service.durationMin);
     let chosen = null;
+    let status = 'pending';
     await fs.runTransaction(db, async (tx) => {
       let staffId = null;
       for (const id of staffIds) {
@@ -227,10 +230,12 @@ export async function connect({ idSalone, firebase }) {
         if (snaps.every((s) => !s.exists())) { staffId = id; break; }
       }
       if (!staffId) throw new SlotTakenError();
+      const bizNow = await tx.get(bizRef);
+      status = bizNow.data()?.website?.autoConfirm === true ? 'confirmed' : 'pending';
       const person = business.staff.find((s) => s.id === staffId);
       const booking = {
         source: 'sito',
-        status: 'pending',
+        status,
         mode: 'appuntamenti',
         date,
         start,
@@ -251,7 +256,7 @@ export async function connect({ idSalone, firebase }) {
       fasceStarts.forEach((m) => tx.set(busySlotRef(staffId, date, m), { staffId, date, start: m, durationMin: FASCIA_MINUTES, bookingId: bookingRef.id }));
       chosen = person;
     });
-    return { id: bookingRef.id, staffId: chosen.id, staffName: chosen.name };
+    return { id: bookingRef.id, staffId: chosen.id, staffName: chosen.name, status };
   }
 
   return { business, watchBusy, fetchBusy, book };

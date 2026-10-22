@@ -75,8 +75,10 @@ window.SITE = {
 
   /* ---------- AGENDO (prenotazioni online) ----------
      Con attivo: true il modulo di prenotazione legge servizi, operatori e
-     orari liberi da Agendo e ci salva le richieste: il salone le conferma
-     dal suo pannello. Il listino e le descrizioni del sito restano quelli
+     orari liberi da Agendo e ci salva le prenotazioni. Se in Agendo è accesa
+     la conferma automatica (Impostazioni → Sito web) sono confermate subito,
+     altrimenti arrivano "in attesa" e il salone le conferma dal suo pannello.
+     Il sito legge da solo l'impostazione e cambia i testi. Il listino e le descrizioni del sito restano quelli
      scritti qui in config.js.
      Con attivo: false il modulo torna come prima: richiesta via Web3Forms
      (se c'è la chiave) e pulsante WhatsApp.
@@ -140,6 +142,7 @@ window.SITE = {
       teamTesto: "Un piccolo team, ognuno con la sua specialità. Puoi scegliere con chi prenotare oppure lasciare a noi la scelta.",
       prenotaTitolo: "Prenota in un minuto.",
       prenotaTesto: "Scegli servizio, operatore e orario. Ti richiamiamo noi per confermare l'appuntamento.",
+      prenotaTestoConfermata: "Scegli servizio, operatore e orario: l'appuntamento è confermato subito, senza attese.",   // con la conferma automatica di Agendo
       faqTitolo: "Domande frequenti.",
       faqTesto: "Non trovi la risposta? Scrivici su WhatsApp: rispondiamo in giornata.",
       contattiTitolo: "Vieni a trovarci."
